@@ -1,0 +1,66 @@
+# Environment Variables and Secrets (CRITICAL: Do NOT commit credentials)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.key
+*.env
+!*.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.next/cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Python / Virtual Environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+pyvenv.cfg
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Machine Learning Caches and Large Models
+dti-prediction-app/backend/esm2_cache/
+**/esm2_cache/
+*.ckpt
+*.safetensors
+# Keep best_production_dti_weights.pt if it's small (8.3 MB) and essential,
+# but ignore other large models if needed:
+# model_weights/
+
+# Docking temp files
+dti-prediction-app/docking/tmp/
+**/tmp/
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor Configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,10 @@
+HSP90
+DHFR
+Topoisomerase I
+Topoisomerase II
+HIV Protease
+SARS-CoV-2 Main Protease
+PD-1
+PD-L1
+Cyclin D1
+Caspase-3

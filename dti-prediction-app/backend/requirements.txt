@@ -1,0 +1,44 @@
+# Python Dependencies for Backend
+# Install with: py -m pip install -r requirements.txt
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# MongoDB async driver (for Atlas cloud)
+motor>=3.3.2
+pymongo>=4.6.0
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib>=1.7.4
+bcrypt>=4.0.1
+python-dotenv>=1.0.0
+
+# Data validation
+pydantic>=2.5.3
+email-validator>=2.1.0
+
+# HTTP Client for external API requests
+httpx>=0.26.0
+
+# Rate limiting
+slowapi>=0.1.9
+
+# Core ML & Deep Learning
+torch>=2.0.0
+torch-geometric>=2.5.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Molecular & Protein Processing 
+rdkit>=2023.09.0
+transformers>=4.35.0
+biopython>=1.82
+scikit-learn>=1.3.0
+
+# ESM2 protein language model
+esmfold>=1.0.0
+
+# Chemoinformatics 
+rdkit>=2023.9.5
