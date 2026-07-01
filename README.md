@@ -1,4 +1,4 @@
-# 🧬 DTI Prediction Web App
+# Web App development for DTI using AI/ML techniques
 > **Final Year Project (FYP): High-Performance Drug-Target Interaction Prediction Web Application**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -12,7 +12,7 @@ An end-to-end, high-performance web application designed to predict **Drug-Targe
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 1. [Project Overview](#-project-overview)
 2. [Machine Learning Pipeline](#-machine-learning-pipeline)
    - [Drug Featurization & Graph Transformer](#1-drug-featurization--graph-transformer)
@@ -30,7 +30,7 @@ An end-to-end, high-performance web application designed to predict **Drug-Targe
 
 ---
 
-## 🌟 Project Overview
+## Project Overview
 
 Identifying Drug-Target Interactions (DTI) is a crucial step in early-stage computer-aided drug discovery. Classic computational methods (like molecular docking) are computationally heavy and scale poorly for high-throughput screening. This application implements a hybrid deep-learning architecture that takes a **Drug SMILES** string and a **Protein FASTA** sequence and outputs:
 1.  **$pK_d$ Binding Affinity**: The predicted log dissociation constant ($pK_d = -\log_{10}(K_d)$).
@@ -39,7 +39,7 @@ Identifying Drug-Target Interactions (DTI) is a crucial step in early-stage comp
 
 ---
 
-## 🧠 Machine Learning Pipeline
+##  Machine Learning Pipeline
 
 The machine learning model (`AdvancedDTIModel`) utilizes a late-fusion design that combines a graph-based drug representation and a language-based protein representation.
 
@@ -88,7 +88,7 @@ Rather than simple concatenation, the model uses an attention mechanism to model
 
 ---
 
-## 🖥️ System Architecture
+##  System Architecture
 
 *   **Next.js 14 Web UI**: Built with React hooks, featuring interactive 3D visualizations for proteins (via AlphaFold/PDB structure loaders) and ligands (via PubChem structural models).
 *   **FastAPI Backend**: Asynchronous endpoint routing using Python's `asyncio` event loop. Pushes PyTorch model runs to a worker threadpool using `run_in_threadpool()` to prevent event-loop blocking.
@@ -97,7 +97,7 @@ Rather than simple concatenation, the model uses an attention mechanism to model
 
 ---
 
-## ⚡ High-Performance Optimizations
+##  High-Performance Optimizations
 
 1.  **Protein Cache (`esm2_cache/`)**: ESM-2 embedding generation can be computationally slow. The backend computes the MD5 hash of input sequences and saves generated embeddings as individual `.pt` files. Future requests on cached sequences return results in **sub-millisecond** times.
 2.  **Parallel Batch Inference**: Batch prediction routes bundle individual drug graphs into a unified `torch_geometric.data.Batch` object and pad protein tensors. The model executes the entire batch in a single forward pass on the GPU.
@@ -105,7 +105,7 @@ Rather than simple concatenation, the model uses an attention mechanism to model
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```directory
 DTI_webapp/
@@ -139,7 +139,7 @@ DTI_webapp/
 
 ---
 
-## ⚙️ Local Installation & Setup
+##  Local Installation & Setup
 
 ### 1. Set Up Environment Variables
 Copy template settings files to active configurations:
@@ -233,7 +233,7 @@ Calculates interaction variables for a single drug-target pair.
 
 ---
 
-## 💾 Database Schema
+##  Database Schema
 
 The logs collected inside the MongoDB collection `prediction_history` use the following schema structure:
 
@@ -273,7 +273,7 @@ The logs collected inside the MongoDB collection `prediction_history` use the fo
 
 ---
 
-## 🧪 Verification & Testing
+##  Verification & Testing
 
 To confirm correct system setup:
 1.  **Register a Test Account**: Visit `http://localhost:3000/register`.
@@ -287,7 +287,7 @@ To confirm correct system setup:
 
 ---
 
-## 🔒 GitHub Security Best Practices
+##  GitHub Security Best Practices
 
 1.  **Never Push Sensitive Keys**: The root `.gitignore` will automatically prevent pushing active configuration `.env` or `.env.local` files containing passwords.
 2.  **Hashed ML Artifact Caching**: Do not remove the `**/esm2_cache/` rule in `.gitignore`. If deleted, git will attempt to stage gigabytes of cache tensors, which will cause push failures.
