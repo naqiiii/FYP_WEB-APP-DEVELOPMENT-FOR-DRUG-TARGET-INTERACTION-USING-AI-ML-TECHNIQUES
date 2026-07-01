@@ -11,7 +11,7 @@ An end-to-end, high-performance web application designed to predict **Drug-Targe
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 *   **Deep Learning Predictor**: Integrates pre-trained **ESM-2** embeddings and PyTorch models for robust, high-accuracy DTI affinity predictions.
 *   **Modern Frontend UI**: Built on **Next.js 14**, featuring responsive layouts, custom interactive components, and premium styling via Tailwind CSS.
@@ -50,7 +50,7 @@ DTI_webapp/
 
 ---
 
-## 🛠️ System Requirements
+## System Requirements
 
 Ensure you have the following installed on your machine:
 *   **Python 3.10+** (Conda manager recommended)
@@ -59,7 +59,7 @@ Ensure you have the following installed on your machine:
 
 ---
 
-## ⚙️ Local Installation & Setup
+## Local Installation & Setup
 
 Follow these steps to run the complete DTI Prediction stack on your machine:
 
@@ -122,7 +122,7 @@ Both backend and frontend require configuration files to operate. Templates are 
 
 ---
 
-## 🧪 Testing and Verification
+## Testing and Verification
 
 To verify that the system runs correctly:
 1. Register a new account through the Web Interface (`http://localhost:3000/register`).
@@ -133,7 +133,7 @@ To verify that the system runs correctly:
 
 ---
 
-## 🔒 Security Best Practices for GitHub Pushing
+## Security Best Practices for GitHub Pushing
 
 1. **Verify Ignored Files**: Before pushing, run `git status` to ensure that virtual environments (`venv/`), Node dependencies (`node_modules/`), local build folders (`.next/`), and environment files containing credentials (`.env`, `.env.local`) are not marked for addition.
 2. **Secrets Scanning**: If you accidentally commit a secret key, revoke the credentials immediately (e.g., change your MongoDB Atlas password and Gmail App Password).
