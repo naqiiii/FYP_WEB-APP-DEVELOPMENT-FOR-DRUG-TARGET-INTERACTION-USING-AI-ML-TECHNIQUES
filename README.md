@@ -1,27 +1,26 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=28&duration=3000&pause=1200&color=22D3EE&center=true&vCenter=true&width=850&lines=Drug%E2%80%93Target+Interaction+Prediction;Graph+Transformers+%2B+Protein+Language+Models;AI+for+Computational+Drug+Discovery" alt="Animated project title"/>
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=25&duration=3000&pause=1200&color=22D3EE&center=true&vCenter=true&width=900&lines=Drug%E2%80%93Target+Interaction+Prediction;Graph+Transformers+%2B+ESM-2;Cross-Attention+%2B+Multi-Task+Learning" alt="Animated title"/>
 
 <br/>
 
-<h1>Drug–Target Interaction Prediction</h1>
+# Drug–Target Interaction Prediction Platform
 
-<p>
-<b>Predicting molecular binding affinity through graph learning and protein language models.</b>
-</p>
+### A deep learning system for computational drug discovery
 
-<p>
-Drug Molecular Graphs &nbsp;×&nbsp; Protein Sequence Embeddings &nbsp;×&nbsp; Cross-Attention
-</p>
+**Molecular Graph Learning · Protein Language Models · Cross-Attention**
 
 <br/>
 
-<img src="https://img.shields.io/badge/PyTorch-Deep_Learning-EE4C2C?style=flat-square&logo=pytorch&logoColor=white"/>
-<img src="https://img.shields.io/badge/PyTorch_Geometric-Graph_Learning-3C3C3C?style=flat-square"/>
-<img src="https://img.shields.io/badge/ESM--2-Protein_Language_Model-6C63FF?style=flat-square"/>
-<img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white"/>
-<img src="https://img.shields.io/badge/Next.js-Frontend-000000?style=flat-square&logo=next.js&logoColor=white"/>
-<img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white"/>
+<a href="https://github.com/naqiiii">
+<img src="https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"/>
+</a>
+<img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"/>
+<img src="https://img.shields.io/badge/PyTorch%20Geometric-GNN-3C3C3C?style=flat-square" alt="PyTorch Geometric"/>
+<img src="https://img.shields.io/badge/ESM--2-Protein%20Language%20Model-6C63FF?style=flat-square" alt="ESM-2"/>
+<img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/>
+<img src="https://img.shields.io/badge/Next.js-Frontend-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js"/>
+<img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB"/>
 
 <br/><br/>
 
@@ -31,44 +30,87 @@ Drug Molecular Graphs &nbsp;×&nbsp; Protein Sequence Embeddings &nbsp;×&nbsp; 
 
 ---
 
+## Overview
+
+Drug discovery involves identifying molecules capable of interacting with biological targets. Screening large numbers of drug candidates against proteins can require computationally intensive workflows, particularly when structural docking is involved.
+
+This project explores a deep learning approach to drug–target interaction prediction by combining molecular graph learning with protein language model representations.
+
+The platform accepts a drug molecule represented by a SMILES string and a protein represented by a FASTA sequence. The model processes both inputs through independent encoders, integrates their representations through cross-attention and gated fusion, and produces binding affinity and interaction probability predictions.
+
+The trained model is integrated into a full-stack application that provides prediction access, molecular analysis, protein and ligand visualization, user authentication and prediction history.
+
 <div align="center">
 
-### From molecular structure to predicted interaction
+**SMILES + FASTA → Representation Learning → Cross-Attention → Prediction**
 
 </div>
 
-A deep learning platform for predicting drug–target interaction affinity using molecular graphs, protein sequence representations and cross-attention fusion.
+---
 
-The system combines a Graph Transformer-based drug encoder with ESM-2 protein embeddings to model drug–protein relationships and produce binding affinity and interaction probability predictions.
+## What the System Does
+
+| Capability | Description |
+|---|---|
+| Drug Representation | Converts SMILES into molecular graphs |
+| Protein Representation | Extracts contextual residue embeddings using ESM-2 |
+| Interaction Modeling | Combines drug and protein representations through cross-attention |
+| Affinity Prediction | Predicts binding affinity as pKd |
+| Kd Conversion | Converts predicted affinity into nanomolar units |
+| Interaction Classification | Predicts interaction probability |
+| Drug-Likeness Analysis | Calculates molecular properties and Lipinski assessment |
+| Protein Analysis | Calculates protein-related physicochemical properties |
+| Structure Visualization | Visualizes drug and protein structures |
+| Prediction History | Stores predictions associated with authenticated users |
+| Molecular Docking | Supports a separate docking workflow |
 
 ---
 
-## The Model
+## Model Architecture
 
-<div align="center">
+The model consists of two representation-learning branches, a cross-attention fusion mechanism, gated fusion and two prediction heads.
 
-```mermaid
-flowchart TD
-    A["Drug SMILES"] --> B["RDKit Molecular Graph"]
-    B --> C["Graph Transformer"]
+### Architecture Flow
 
-    D["Protein FASTA"] --> E["ESM-2 · 650M"]
-    E --> F["Protein Residue Embeddings"]
-
-    C --> G["Cross-Attention Fusion"]
-    F --> G
-
-    G --> H["Gated Fusion & Pooling"]
-
-    H --> I["Affinity Regression"]
-    H --> J["Interaction Classification"]
-
-    I --> K["Predicted pKd"]
-    K --> L["Kd · nM"]
-
-    J --> M["Interaction Probability"]
-
-    class A,D fill:#0f172a,stroke:#38bdf8,color:#ffffff
-    class B,C,E,F fill:#1e293b,stroke:#64748b,color:#ffffff
-    class G,H fill:#312e81,stroke:#a78bfa,color:#ffffff
-    class I,J,K,L,M fill:#064e3b,stroke:#34d399,color:#ffffff
+```text
+                          INPUTS
+                 ┌────────────────────┐
+                 │                    │
+             Drug SMILES         Protein FASTA
+                 │                    │
+                 ▼                    ▼
+              RDKit                 ESM-2
+                 │                 650 Million
+                 ▼                    │
+         Molecular Graph              ▼
+                 │             Residue Embeddings
+                 ▼                    │
+       Graph Transformer              ▼
+           3 Layers             Linear Projection
+                 │                    │
+                 ▼                    ▼
+        Atom Embeddings       Protein Embeddings
+           256-D                  256-D
+                 │                    │
+                 └─────────┬──────────┘
+                           │
+                           ▼
+                  Cross-Attention Fusion
+                           │
+                           ▼
+                    Gated Fusion
+                     + Pooling
+                           │
+                           ▼
+                 Unified Representation
+                           │
+                 ┌─────────┴─────────┐
+                 │                   │
+                 ▼                   ▼
+          Regression Head     Classification Head
+                 │                   │
+                 ▼                   ▼
+                pKd           Interaction Probability
+                 │
+                 ▼
+              Kd (nM)
