@@ -1,28 +1,18 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=25&duration=3000&pause=1200&color=22D3EE&center=true&vCenter=true&width=900&lines=Drug%E2%80%93Target+Interaction+Prediction;Graph+Transformers+%2B+ESM-2;Cross-Attention+%2B+Multi-Task+Learning" alt="Animated title"/>
-
-<br/>
-
 # Drug–Target Interaction Prediction Platform
 
-### A deep learning system for computational drug discovery
+### Graph Neural Networks × Protein Language Models
 
-**Molecular Graph Learning · Protein Language Models · Cross-Attention**
+A deep learning platform for predicting drug–target binding affinity
+using molecular graph learning, protein representations,
+cross-attention and multi-task prediction.
 
 <br/>
 
-<a href="https://github.com/naqiiii">
-<img src="https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"/>
-</a>
-<img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"/>
-<img src="https://img.shields.io/badge/PyTorch%20Geometric-GNN-3C3C3C?style=flat-square" alt="PyTorch Geometric"/>
-<img src="https://img.shields.io/badge/ESM--2-Protein%20Language%20Model-6C63FF?style=flat-square" alt="ESM-2"/>
-<img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/>
-<img src="https://img.shields.io/badge/Next.js-Frontend-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js"/>
-<img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB"/>
+**Drug SMILES** → **Molecular Graph** → **AI Model** → **Binding Prediction**
 
-<br/><br/>
+<br/>
 
 <sub>Final Year Project · BS Computer & Information Science · PIEAS</sub>
 
@@ -36,81 +26,91 @@ Drug discovery involves identifying molecules capable of interacting with biolog
 
 This project explores a deep learning approach to drug–target interaction prediction by combining molecular graph learning with protein language model representations.
 
-The platform accepts a drug molecule represented by a SMILES string and a protein represented by a FASTA sequence. The model processes both inputs through independent encoders, integrates their representations through cross-attention and gated fusion, and produces binding affinity and interaction probability predictions.
+The platform accepts a drug molecule represented by a SMILES string and a protein represented by a FASTA sequence. Both inputs are processed through independent encoders, integrated through cross-attention and gated fusion, and passed to multi-task prediction heads.
 
-The trained model is integrated into a full-stack application that provides prediction access, molecular analysis, protein and ligand visualization, user authentication and prediction history.
+The model predicts binding affinity and interaction probability, while the integrated web application provides molecular analysis, structure visualization, authentication and prediction history.
 
 <div align="center">
 
-**SMILES + FASTA → Representation Learning → Cross-Attention → Prediction**
+**Molecular Structure + Protein Sequence**
+
+↓
+
+**Graph Transformer + ESM-2**
+
+↓
+
+**Cross-Attention & Gated Fusion**
+
+↓
+
+**Affinity & Interaction Prediction**
 
 </div>
 
 ---
 
-## What the System Does
+## What the Platform Provides
 
 | Capability | Description |
 |---|---|
-| Drug Representation | Converts SMILES into molecular graphs |
-| Protein Representation | Extracts contextual residue embeddings using ESM-2 |
+| Molecular Representation | Converts drug SMILES into molecular graphs |
+| Protein Representation | Generates contextual residue embeddings using ESM-2 |
 | Interaction Modeling | Combines drug and protein representations through cross-attention |
-| Affinity Prediction | Predicts binding affinity as pKd |
-| Kd Conversion | Converts predicted affinity into nanomolar units |
+| Binding Affinity | Predicts affinity in pKd |
+| Kd Conversion | Converts affinity into nanomolar units |
 | Interaction Classification | Predicts interaction probability |
-| Drug-Likeness Analysis | Calculates molecular properties and Lipinski assessment |
-| Protein Analysis | Calculates protein-related physicochemical properties |
+| Drug-Likeness | Calculates molecular properties and Lipinski assessment |
+| Protein Analysis | Calculates protein physicochemical properties |
 | Structure Visualization | Visualizes drug and protein structures |
-| Prediction History | Stores predictions associated with authenticated users |
-| Molecular Docking | Supports a separate docking workflow |
+| Prediction History | Stores user-specific prediction records |
+| Authentication | JWT-based authentication |
+| Molecular Docking | Optional structural docking workflow |
 
 ---
 
-## Model Architecture
+# Model Architecture
 
-The model consists of two representation-learning branches, a cross-attention fusion mechanism, gated fusion and two prediction heads.
-
-### Architecture Flow
+The model combines two representation-learning branches, cross-attention fusion, a gated fusion mechanism and two prediction heads.
 
 ```text
-                          INPUTS
-                 ┌────────────────────┐
-                 │                    │
-             Drug SMILES         Protein FASTA
-                 │                    │
-                 ▼                    ▼
-              RDKit                 ESM-2
-                 │                 650 Million
-                 ▼                    │
-         Molecular Graph              ▼
-                 │             Residue Embeddings
-                 ▼                    │
-       Graph Transformer              ▼
-           3 Layers             Linear Projection
-                 │                    │
-                 ▼                    ▼
-        Atom Embeddings       Protein Embeddings
-           256-D                  256-D
-                 │                    │
-                 └─────────┬──────────┘
-                           │
-                           ▼
-                  Cross-Attention Fusion
-                           │
-                           ▼
-                    Gated Fusion
-                     + Pooling
-                           │
-                           ▼
-                 Unified Representation
-                           │
-                 ┌─────────┴─────────┐
-                 │                   │
-                 ▼                   ▼
-          Regression Head     Classification Head
-                 │                   │
-                 ▼                   ▼
-                pKd           Interaction Probability
-                 │
-                 ▼
+                    DRUG–TARGET INPUTS
+
+          Drug SMILES              Protein FASTA
+               |                       |
+               v                       v
+             RDKit                   ESM-2
+               |                    650M
+               v                       |
+       Molecular Graph                 v
+               |               Residue Embeddings
+               v                       |
+      Graph Transformer                v
+          3 Layers              Linear Projection
+               |                       |
+               v                       v
+       Atom Embeddings          Protein Embeddings
+           256-D                   256-D
+               |                       |
+               +----------+------------+
+                          |
+                          v
+                 Cross-Attention Fusion
+                          |
+                          v
+                   Gated Fusion
+                    + Pooling
+                          |
+                          v
+                Fused Representation
+                          |
+                +---------+---------+
+                |                   |
+                v                   v
+         Regression Head     Classification Head
+                |                   |
+                v                   v
+               pKd          Interaction Probability
+                |
+                v
               Kd (nM)
