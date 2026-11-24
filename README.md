@@ -1,294 +1,175 @@
-# Web App development for DTI using AI/ML techniques
-> **Final Year Project (FYP): High-Performance Drug-Target Interaction Prediction Web Application**
+<div align="center">
+Drug–Target Interaction Prediction Platform
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)](https://pytorch.org/)
-[![PyTorch Geometric](https://img.shields.io/badge/PyG-%233C2179.svg?style=for-the-badge&logoColor=white)](https://pytorch-geometric.readthedocs.io/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+Graph Neural Networks meet protein language models, served through a production-style web app.
 
-An end-to-end, high-performance web application designed to predict **Drug-Target Interactions (DTI)** using state-of-the-art Deep Learning models. The system integrates a **Graph Neural Network (GNN)** with **ESM-2 (Evolutionary Scale Modeling)** protein language models to predict binding affinities and interaction confidence between drug molecules and target proteins.
+Paste a drug SMILES and a protein sequence. Get binding affinity, Kd and interaction confidence in seconds, with 3D structures alongside.
 
----
+<br>
 
-## Table of Contents
-1. [Project Overview](#-project-overview)
-2. [Machine Learning Pipeline](#-machine-learning-pipeline)
-   - [Drug Featurization & Graph Transformer](#1-drug-featurization--graph-transformer)
-   - [Protein Embedding (ESM-2)](#2-protein-embedding-esm-2)
-   - [Cross-Attention Fusion Engine](#3-cross-attention-fusion-engine)
-   - [Multi-Task Prediction Heads](#4-multi-task-prediction-heads)
-3. [System Architecture](#-system-architecture)
-4. [High-Performance Optimizations](#-high-performance-optimizations)
-5. [Repository Structure](#-repository-structure)
-6. [Local Installation & Setup](#-local-installation--setup)
-7. [API Contract & Schema](#-api-contract--schema)
-8. [Database Schema](#-database-schema)
-9. [Verification & Testing](#-verification--testing)
-10. [GitHub Security Best Practices](#-github-security-best-practices)
+FastAPI Next.js PyTorch PyTorch Geometric MongoDB TailwindCSS
 
----
+<sub>Final Year Project · BS Computer Science · PIEAS</sub>
 
-## Project Overview
+</div>
+What it does
 
-Identifying Drug-Target Interactions (DTI) is a crucial step in early-stage computer-aided drug discovery. Classic computational methods (like molecular docking) are computationally heavy and scale poorly for high-throughput screening. This application implements a hybrid deep-learning architecture that takes a **Drug SMILES** string and a **Protein FASTA** sequence and outputs:
-1.  **$pK_d$ Binding Affinity**: The predicted log dissociation constant ($pK_d = -\log_{10}(K_d)$).
-2.  **Dissociation Constant ($K_d$ in nM)**: Quantified binding affinity in nanomolar units.
-3.  **Interaction Probability (Confidence)**: The probability that an interaction occurs.
+Early-stage drug discovery needs a fast way to screen which molecules are likely to bind which proteins. Molecular docking is accurate but heavy, and it scales poorly when you want to screen at volume.
 
----
+This platform takes a different route. A learned model predicts the interaction directly from a drug SMILES string and a protein FASTA sequence, and returns three things:
 
-##  Machine Learning Pipeline
+Output	Meaning
+pKd	Predicted binding affinity, where pKd = −log₁₀(Kd)
+Kd (nM)	The same affinity in nanomolar units
+Confidence	Probability that the pair actually interacts
 
-The machine learning model (`AdvancedDTIModel`) utilizes a late-fusion design that combines a graph-based drug representation and a language-based protein representation.
+On top of the model sits a full web product: accounts, prediction history, drug-likeness analysis, interactive 3D viewers and an optional docking service.
 
-```
-       [Drug SMILES]                                [Protein FASTA]
-            │                                              │
-     (RDKit Parsing)                              (ESM-2 650M Model)
-            │                                              │
-    [Molecular Graph]                          [Residue Embeddings (L × 1280)]
-            │                                              │
- (GNN Graph Transformer)                            (Linear Projection)
-            │                                              │
- [Atom Embeddings (N × 256)]                    [Protein Context (L × 256)]
-            └───────────────────────┬──────────────────────┘
-                                    │
-                       (Multi-Head Cross-Attention)
-                                    │
-                         (Gated Fusion Pooling)
-                                    │
-                         [Fused Context (256)]
-                                    ├──> [Regressor Head] ──> pKd (Binding Affinity)
-                                    └──> [Classifier Head] ──> Interaction Probability
-```
+Highlights
+Hybrid deep learning model. A 3-layer Graph Transformer encodes the drug as a molecular graph, and the 650M-parameter ESM-2 encodes the protein.
+Cross-attention fusion. Drug atoms attend over protein residues, so the model can relate functional groups to candidate binding regions instead of just concatenating two vectors.
+Multi-task output. One forward pass gives a regression head (pKd) and a classification head (interaction probability).
+Fast by design. Embedding cache, batched GPU inference and managed VRAM keep repeat queries near-instant.
+Complete product. JWT auth, per-user history, Lipinski analysis and 3D structure viewers, not just a notebook.
+Model architecture
+Drug SMILES
+RDKit parsing
+Molecular graph41-dim atoms, 6-dim bonds
+Graph Transformer3x TransformerConv
+Atom embeddingsN x 256
+Protein FASTA
+ESM-2 650M
+Residue embeddingsL x 1280
+Linear projection
+Protein contextL x 256
+Multi-head cross-attentionatoms query residues
+Gated fusion pooling
+Fused context256
+Regressor headpKd
+Classifier headinteraction probability
+Drug side
 
-### 1. Drug Featurization & Graph Transformer
-Molecules are parsed using RDKit into a graph $G=(V,E)$ where atoms are nodes and bonds are edges.
-*   **Atom Node Features (41 dimensions)**: Includes atomic symbol one-hot vectors, atom degree, total hydrogens, implicit valence, aromaticity, ring membership, and **Gasteiger partial charge** (for electrostatic modeling).
-*   **Bond Edge Features (6 dimensions)**: One-hot representation of bond type (Single, Double, Triple, Aromatic), ring membership, and conjugation.
-*   **AdvancedDrugEncoder**: A 3-layer Graph Transformer network that uses PyTorch Geometric's `TransformerConv` layers. It computes multi-head self-attention over neighboring atoms to learn representations that incorporate local chemical environments.
+Molecules are parsed with RDKit into a graph where atoms are nodes and bonds are edges.
 
-### 2. Protein Embedding (ESM-2)
-*   **ESM-2 Model**: The model uses `facebook/esm2_t33_650M_UR50D`, a **650 Million parameter** transformer pre-trained on evolutionary sequences.
-*   For each amino acid sequence, it extracts a representation of shape `(Sequence_Length, 1280)`.
-*   Special tokens `[CLS]` and `[EOS]` are removed to preserve only actual residue positions.
+Atom features (41 dims): element one-hot, degree, total hydrogens, implicit valence, aromaticity, ring membership and Gasteiger partial charge for electrostatics.
+Bond features (6 dims): bond type (single, double, triple, aromatic), ring membership and conjugation.
+Encoder: AdvancedDrugEncoder, a 3-layer stack of PyTorch Geometric TransformerConv layers that applies multi-head attention over each atom's neighbours.
+Protein side
+Model: facebook/esm2_t33_650M_UR50D, pretrained on evolutionary sequence data.
+Output: a (sequence_length, 1280) residue representation, with [CLS] and [EOS] tokens stripped so only real residues remain.
+Fusion and prediction
+Protein embeddings are projected from 1280 to 256 dimensions.
+Drug atoms act as queries over protein residues (keys and values), then a learned gate controls how much drug and protein context flows into the final representation.
+The regression head outputs pKd, which is converted to nanomolar:
+$$K_d\,(\text{nM}) = 10^{\,9 - pK_d}$$
+System architecture
+REST
+Next.js 14 UI3D viewers, charts, history
+FastAPI backendasync + threadpoolinference
+AdvancedDTIModelPyTorch + ESM-2
+MongoDB Atlasusers, prediction history
+Docking microserviceAutoDock Vina / GNINA
+Structure sourcesAlphaFold, PDB, UniProt,ESMFold, PubChem
+Layer	Role
+Frontend	Next.js 14 with Tailwind. Interactive 3D protein (AlphaFold/PDB) and ligand (PubChem) viewers, affinity gauges and a history view.
+Backend	FastAPI with async routing. Model runs are pushed to a worker threadpool with run_in_threadpool() so the event loop never blocks.
+Docking service	A separate FastAPI service wrapping 3D docking workflows, kept apart so heavy structural jobs never slow down predictions.
+Database	MongoDB Atlas stores JWT-authenticated users and every prediction alongside its calculated Lipinski properties.
+Performance engineering
+Optimization	What it does
+Protein embedding cache	ESM-2 is the slow step. The backend hashes each sequence (MD5) and stores its embedding as a .pt file, so repeat sequences return in sub-millisecond time.
+Batched GPU inference	Many drug graphs are merged into one torch_geometric.data.Batch and protein tensors are padded, so a whole batch runs in a single forward pass.
+VRAM management	gc.collect() and torch.cuda.empty_cache() run after inference to stop memory from creeping up under load.
+Quick start
 
-### 3. Cross-Attention Fusion Engine
-Rather than simple concatenation, the model uses an attention mechanism to model binding pockets:
-*   The 1280-dimensional protein embeddings are projected to 256 dimensions.
-*   **Cross-Attention**: Drug atom features query ($Q$) the protein residue embeddings ($K$ & $V$). This allows the model to match drug functional groups to candidate binding residues.
-*   **Gating Mechanism**: A neural gate controls the flow of drug and protein contexts into the final representation.
+1. Configure environment
 
-### 4. Multi-Task Prediction Heads
-*   **Regression Head**: Projects the fused representation to predict $pK_d$. The system automatically translates this to nanomolar units:
-    $$K_d(\text{nM}) = 10^{(9 - pK_d)}$$
-*   **Classifier Head**: Predicts binary interaction classification. The probability score represents the interaction confidence.
+bash
+# backend and docking
+cp dti-prediction-app/backend/.env.example dti-prediction-app/backend/.env
+cp dti-prediction-app/docking/.env.example dti-prediction-app/docking/.env
 
----
+# frontend
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > dti-prediction-app/frontend/.env.local
 
-##  System Architecture
+Fill in your database URI, secret key and email settings in the backend .env.
 
-*   **Next.js 14 Web UI**: Built with React hooks, featuring interactive 3D visualizations for proteins (via AlphaFold/PDB structure loaders) and ligands (via PubChem structural models).
-*   **FastAPI Backend**: Asynchronous endpoint routing using Python's `asyncio` event loop. Pushes PyTorch model runs to a worker threadpool using `run_in_threadpool()` to prevent event-loop blocking.
-*   **FastAPI Docking Microservice**: A secondary service wrapper that handles 3D docking calculations (such as AutoDock Vina or GNINA workflows), keeping heavy structural modeling isolated from user-facing API routes.
-*   **MongoDB Atlas Cloud Database**: Logs user details (JWT authentication) and logs prediction query history alongside calculated Lipinski molecular properties.
+2. Run the backend
 
----
+bash
+cd dti-prediction-app/backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.server:app --host 127.0.0.1 --port 8000 --reload
 
-##  High-Performance Optimizations
+API at http://localhost:8000, interactive docs at http://localhost:8000/docs.
 
-1.  **Protein Cache (`esm2_cache/`)**: ESM-2 embedding generation can be computationally slow. The backend computes the MD5 hash of input sequences and saves generated embeddings as individual `.pt` files. Future requests on cached sequences return results in **sub-millisecond** times.
-2.  **Parallel Batch Inference**: Batch prediction routes bundle individual drug graphs into a unified `torch_geometric.data.Batch` object and pad protein tensors. The model executes the entire batch in a single forward pass on the GPU.
-3.  **VRAM Management**: Triggers Python garbage collection (`gc.collect()`) and PyTorch CUDA cache flushing (`torch.cuda.empty_cache()`) post-inference to prevent memory accumulation.
+3. Run the frontend
 
----
+bash
+cd dti-prediction-app/frontend
+npm install
+npm run dev
 
-##  Repository Structure
+App at http://localhost:3000.
 
-```directory
-DTI_webapp/
-├── .gitignore                         # Local caches, dependencies, and credential ignore rules
-├── README.md                          # Comprehensive project guide (this file)
-└── dti-prediction-app/
-    ├── backend/                       # FastAPI Server and PyTorch DL model
-    │   ├── app/                       
-    │   │   ├── drug_target_prediction/ # GNN models, preprocessing, translation services
-    │   │   ├── user_authentication/   # JWT verification, register/login logic
-    │   │   ├── prediction_history/    # History query controllers
-    │   │   ├── visualization/         # 3D loaders (UniProt, AlphaFold, PDB, ESMFold API)
-    │   │   ├── mongodb_connection.py  # Async Mongo Atlas integration
-    │   │   └── server.py              # Root FastAPI application router
-    │   ├── best_production_dti_weights.pt # Production Graph Transformer weights
-    │   ├── requirements.txt           # Python backend dependencies
-    │   └── .env.example               # Template environment settings
-    ├── frontend/                      # Next.js UI web interface
-    │   ├── src/                       
-    │   │   ├── components/            # UI components (3D viewers, gauges, charts)
-    │   │   └── pages/                 # Routing pages (Authentication, Screeners, History)
-    │   ├── package.json               # Next.js configurations
-    │   └── tailwind.config.js         # CSS theme parameters
-    ├── docking/                       # Docking engine API wrapper
-    │   ├── app/main.py                # Main docking routes (Mock/Real AutoDock Vina)
-    │   └── requirements.txt           # Docking dependencies
-    ├── fyp_info_files/                # Academic documents
-    │   └── FYP_REPORT.docx            # Complete FYP Thesis
-    └── testing_samples/               # SMILES and FASTA sample files for validation
-```
+4. Try a prediction
 
----
+Register an account, then use the samples in testing_samples/, for example Paracetamol (CC(=O)NC1=CC=C(O)C=C1) against Rhodopsin.
 
-##  Local Installation & Setup
+API
+POST /api/predict
 
-### 1. Set Up Environment Variables
-Copy template settings files to active configurations:
-*   **Backend**: Navigate to `dti-prediction-app/backend/`. Copy `.env.example` to `.env` and fill in your database, secret key, and email settings.
-*   **Docking**: Navigate to `dti-prediction-app/docking/`. Copy `.env.example` to `.env`.
-*   **Frontend**: Navigate to `dti-prediction-app/frontend/`. Create a `.env.local` containing:
-    ```env
-    NEXT_PUBLIC_API_URL=http://localhost:8000
-    ```
+Predicts the interaction for a single drug–target pair.
 
-### 2. Run the Backend Server
-1. Navigate to the backend directory:
-   ```bash
-   cd dti-prediction-app/backend
-   ```
-2. Create and activate a Python virtual environment:
-   ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Start the server:
-   ```bash
-   uvicorn app.server:app --host 127.0.0.1 --port 8000 --reload
-   ```
-   *   **API Root URL**: `http://localhost:8000`
-   *   **Swagger Docs**: `http://localhost:8000/docs`
-
-### 3. Run the Frontend Client
-1. Navigate to the frontend directory:
-   ```bash
-   cd dti-prediction-app/frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Next.js development client:
-   ```bash
-   npm run dev
-   ```
-   *   **App UI URL**: `http://localhost:3000`
-
----
-
-## 🔌 API Contract & Schema
-
-### `POST /api/predict`
-Calculates interaction variables for a single drug-target pair.
-
-*   **Request Body**:
-    ```json
-    {
-      "smiles": "CC(=O)NC1=CC=C(O)C=C1",
-      "drug_name": "Paracetamol",
-      "sequence": "MNGTEGPNFYVPFSNKTGVVRSPFEAPQYYLAEPWQFML...",
-      "protein_name": "Rhodopsin",
-      "min_affinity_checkpoint": 6.0
-    }
-    ```
-*   **Response Body**:
-    ```json
-    {
-      "affinity": 32.551,
-      "log_affinity": 7.487,
-      "confidence": 0.9412,
-      "model_name": "AdvancedDTIModel (TransformerConv+CrossAttentionFusion)",
-      "drug_smiles": "CC(=O)NC1=CC=C(O)C=C1",
-      "protein_sequence": "MNGTEGPNFYVPFSNKTGVVRSPFEAPQYYLAEPWQFML...",
-      "drug_label": "Paracetamol",
-      "protein_label": "Rhodopsin",
-      "drug_likeness": {
-        "molecular_weight": 151.16,
-        "logp": 0.91,
-        "lipinski_violations": 0,
-        "passes_lipinski": true
-      },
-      "protein_info": {
-        "length": 348,
-        "molecular_weight": 38893.2,
-        "isoelectric_point": 6.21
-      }
-    }
-    ```
-
----
-
-##  Database Schema
-
-The logs collected inside the MongoDB collection `prediction_history` use the following schema structure:
-
-```json
+<details> <summary><b>Request</b></summary>
+json
 {
-  "_id": "ObjectId",
-  "user_id": "string (JWT sub token)",
-  "drug_smiles": "string",
-  "protein_sequence": "string",
-  "drug_label": "string",
-  "protein_label": "string",
-  "affinity": "double",
-  "log_affinity": "double",
-  "confidence": "double",
-  "model_name": "string",
-  "created_at": "ISODate",
+  "smiles": "CC(=O)NC1=CC=C(O)C=C1",
+  "drug_name": "Paracetamol",
+  "sequence": "MNGTEGPNFYVPFSNKTGVVRSPFEAPQYYLAEPWQFML...",
+  "protein_name": "Rhodopsin",
+  "min_affinity_checkpoint": 6.0
+}
+</details> <details> <summary><b>Response</b></summary>
+json
+{
+  "affinity": 32.551,
+  "log_affinity": 7.487,
+  "confidence": 0.9412,
+  "model_name": "AdvancedDTIModel (TransformerConv+CrossAttentionFusion)",
+  "drug_label": "Paracetamol",
+  "protein_label": "Rhodopsin",
   "drug_likeness": {
-    "molecular_weight": "double",
-    "logp": "double",
-    "h_bond_donors": "int",
-    "h_bond_acceptors": "int",
-    "rotatable_bonds": "int",
-    "tpsa": "double",
-    "lipinski_violations": "int",
-    "passes_lipinski": "boolean"
+    "molecular_weight": 151.16,
+    "logp": 0.91,
+    "lipinski_violations": 0,
+    "passes_lipinski": true
   },
   "protein_info": {
-    "length": "int",
-    "molecular_weight": "double",
-    "aromaticity": "double",
-    "instability_index": "double",
-    "isoelectric_point": "double",
-    "gravy": "double"
+    "length": 348,
+    "molecular_weight": 38893.2,
+    "isoelectric_point": 6.21
   }
 }
-```
+</details>
 
----
+Every prediction is also saved per user in the prediction_history collection, together with the full drug-likeness profile (H-bond donors and acceptors, rotatable bonds, TPSA) and protein properties (aromaticity, instability index, GRAVY).
 
-##  Verification & Testing
+Project layout
+dti-prediction-app/
+├── backend/      FastAPI server, GNN model, auth, history, 3D structure loaders
+├── frontend/     Next.js interface: components, pages, Tailwind theme
+├── docking/      Docking microservice
+├── fyp_info_files/   Thesis report
+└── testing_samples/  Sample SMILES and FASTA files
+Notes for contributors
+Never commit .env or .env.local. The root .gitignore already excludes them.
+Keep the **/esm2_cache/ rule in .gitignore. Without it, git tries to stage gigabytes of cached tensors.
+Restrict your MongoDB Atlas cluster to known IP addresses.
+<div align="center">
 
-To confirm correct system setup:
-1.  **Register a Test Account**: Visit `http://localhost:3000/register`.
-2.  **Verify Backend Connections**: Ensure that your backend terminal displays:
-    `Connecting to MongoDB... Connected successfully!`
-    `Starting up DTI Prediction API... Preloading ESM-2... API is ready!`
-3.  **Run a Test Prediction**: Use these structures from `testing_samples/`:
-    *   **Drug SMILES**: `CC(=O)NC1=CC=C(O)C=C1` (Paracetamol)
-    *   **Protein FASTA**: `MNGTEGPNFYVPFSNKTGVVRSPFEAPQYYLAEPWQFMLAAYMFLLIVLGFPINFLTLYVTVQHKKLRTPLNYILLNLAVADLFMVFGGFTTTLYTSLHGYFVFGPTGCNLEGFFATLGGEIALWSLVVLAIERWVVVCKPMSNFRFGENHAIMGVAFTWVMALACAAPPLVGWSRYIPEGMQCSCGIDYYTPHEETNNESFVIYMFVVHFIIPLIVIFFCYGQLVFTVKEAAAQQQESATTQKAEKEVTRMVIIMVIAFLICWLPYAGVAFYIFTHQGSDFGPIFMTIPAFFAKTSAVYNPVIYIMMNKQFRNCMVTTLCCGKNPLGDDEASTTVSKTETSQVAPA` (Rhodopsin)
-4.  **Confirm Results**: A successful execution displays output values for $K_d$ and $pK_d$ along with 3D structural mappings.
+Built by Syed Hassan Raza · GitHub · Portfolio
 
----
-
-##  GitHub Security Best Practices
-
-1.  **Never Push Sensitive Keys**: The root `.gitignore` will automatically prevent pushing active configuration `.env` or `.env.local` files containing passwords.
-2.  **Hashed ML Artifact Caching**: Do not remove the `**/esm2_cache/` rule in `.gitignore`. If deleted, git will attempt to stage gigabytes of cache tensors, which will cause push failures.
-3.  **Hacking Prevention**: Ensure that your MongoDB Atlas instance uses IP Whitelisting (restricting connection access to specified deployment addresses only).
+</div>
